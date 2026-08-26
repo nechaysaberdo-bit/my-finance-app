@@ -1,0 +1,13 @@
+{
+  "expo": {
+    "name": "My Finance",
+    "slug": "my-finance-native",
+    "scheme": "myfinance",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "plugins": ["expo-router"],
+    "ios": {"supportsTablet": false, "bundleIdentifier": "com.rebecca.myfinance"},
+    "android": {"package": "com.rebecca.myfinance"}
+  }
+}

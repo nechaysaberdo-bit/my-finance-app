@@ -1,0 +1,2 @@
+import { useRouter } from 'expo-router'; import { Screen, Card, ListItem, Button } from '../components/ui';
+export default function Bills(){const r=useRouter();return <Screen back onBack={()=>r.back()} title="Bills 🧾"><Card><ListItem icon="⚡" title="Electricity" subtitle="Due Aug 28 · recurring" right="₱3,200"/><ListItem icon="🌐" title="Internet" subtitle="Due Sep 2 · recurring" right="₱1,699"/><ListItem icon="📱" title="Phone" subtitle="Due Sep 5 · recurring" right="₱999"/></Card><Button title="+ Add bill"/></Screen>}

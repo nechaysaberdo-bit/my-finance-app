@@ -1,0 +1,2 @@
+import { useRouter } from 'expo-router'; import { Screen, Card, Row, Money, Muted, Progress } from '../components/ui'; import { loans } from '../data/mock';
+export default function Loans(){const r=useRouter();return <Screen back onBack={()=>r.back()} title="Loans 🎀">{loans.map((l,i)=><Card key={l.id} onPress={()=>i===0&&r.push('/loan')}><Row left={<><Money>{l.name}</Money><Muted>{l.owner}</Muted></>} right={<Money>₱{l.remaining.toLocaleString()}</Money>}/><Progress value={Math.round((l.paid/l.original)*100)}/></Card>)}</Screen>}

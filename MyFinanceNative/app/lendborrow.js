@@ -1,0 +1,2 @@
+import { useRouter } from 'expo-router'; import { Screen, Card, ListItem, Button } from '../components/ui';
+export default function LendBorrow(){const r=useRouter();return <Screen back onBack={()=>r.back()} title="Lend / Borrow 🤝"><Card><ListItem icon="🌷" title="Anna owes me" subtitle="Lent ₱10,000" right="₱7,000 left"/><ListItem icon="💌" title="I owe Mama" subtitle="Borrowed ₱15,000" right="₱10,000 left"/></Card><Button title="+ Add lend / borrow"/></Screen>}
