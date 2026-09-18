@@ -19,9 +19,9 @@ import {
 } from 'expo-router';
 
 import {
-  getLoans,
+  getLendBorrowRecords,
   getTransactions,
-  deleteLoan,
+  deleteLendBorrowRecord,
 } from '../lib/storage';
 
 const c = {
@@ -31,33 +31,41 @@ const c = {
   muted: '#92999B',
   teal: '#22BDA5',
   green: '#E7F5E8',
-  yellow: '#FFF4D6',
   pink: '#FBE8ED',
   blue: '#E7F2FF',
+  yellow: '#FFF4D6',
   line: '#E5EAEA',
   red: '#D96A78',
 };
 
-export default function LoanDetail() {
+export default function LendBorrowDetail() {
   const router = useRouter();
-  const { id } = useLocalSearchParams();
+  const { id } =
+    useLocalSearchParams();
 
-  const [loans, setLoans] = useState([]);
-  const [transactions, setTransactions] =
+  const [records, setRecords] =
     useState([]);
 
+  const [
+    transactions,
+    setTransactions,
+  ] = useState([]);
+
   async function loadData() {
-    const loanData = await getLoans();
-    const transactionData =
+    const recordData =
+      await getLendBorrowRecords();
+
+    const txData =
       await getTransactions();
 
-    setLoans(loanData);
+    setRecords(recordData);
 
     setTransactions(
-      transactionData.filter(
+      txData.filter(
         (item) =>
-          String(item.loanId) ===
-          String(id)
+          String(
+            item.lendBorrowId
+          ) === String(id)
       )
     );
   }
@@ -68,17 +76,17 @@ export default function LoanDetail() {
     }, [id])
   );
 
-  const loan = useMemo(
+  const record = useMemo(
     () =>
-      loans.find(
+      records.find(
         (item) =>
           String(item.id) ===
           String(id)
       ),
-    [loans, id]
+    [records, id]
   );
 
-  if (!loan) {
+  if (!record) {
     return (
       <View
         style={{
@@ -91,17 +99,19 @@ export default function LoanDetail() {
       >
         <Text
           style={{
-            fontSize: 18,
-            fontWeight: '800',
             color: c.ink,
+            fontWeight: '800',
+            fontSize: 18,
           }}
         >
-          Loan not found
+          Record not found
         </Text>
 
         <Pressable
           onPress={() =>
-            router.replace('/loans')
+            router.replace(
+              '/lendborrow'
+            )
           }
           style={{
             marginTop: 16,
@@ -117,40 +127,43 @@ export default function LoanDetail() {
               fontWeight: '800',
             }}
           >
-            Back to loans
+            Back to Lend / Borrow
           </Text>
         </Pressable>
       </View>
     );
   }
 
-  const principal =
-    Number(loan.principal || 0);
+  const original =
+    Number(
+      record.originalAmount || 0
+    );
 
   const remaining =
     Number(
-      loan.remainingBalance || 0
+      record.remainingAmount || 0
     );
 
   const paid = Math.max(
-    principal - remaining,
+    original - remaining,
     0
   );
 
   const progress =
-    principal > 0
+    original > 0
       ? Math.min(
-          (paid / principal) * 100,
+          (paid / original) * 100,
           100
         )
       : 0;
 
-  const isMine =
-    loan.owner === 'mine';
+  const isLent =
+    record.direction === 'lent';
 
-  const isPaid =
+  const settled =
     remaining <= 0 ||
-    loan.status === 'paid';
+    record.status === 'settled' ||
+    record.status === 'paid';
 
   function handleDelete() {
     const historyCount =
@@ -158,15 +171,15 @@ export default function LoanDetail() {
 
     const message =
       historyCount > 0
-        ? `${loan.name} has ${historyCount} payment record${
+        ? `This record has ${historyCount} related transaction${
             historyCount === 1
               ? ''
               : 's'
-          }. The loan will be removed, but its historical transactions will remain.`
-        : `Delete ${loan.name}? This cannot be undone.`;
+          }. The Lend/Borrow record will be removed, but those historical transactions will remain.`
+        : `Delete this ${isLent ? 'lend' : 'borrow'} record for ${record.person}?`;
 
     Alert.alert(
-      'Delete loan?',
+      'Delete record?',
       message,
       [
         {
@@ -179,16 +192,16 @@ export default function LoanDetail() {
 
           onPress: async () => {
             try {
-              await deleteLoan(
-                loan.id
+              await deleteLendBorrowRecord(
+                record.id
               );
 
               router.replace(
-                '/loans'
+                '/lendborrow'
               );
             } catch (error) {
               Alert.alert(
-                'Could not delete loan',
+                'Could not delete record',
                 error?.message ||
                   'Something went wrong.'
               );
@@ -255,9 +268,9 @@ export default function LoanDetail() {
               fontSize: 12,
             }}
           >
-            {isMine
-              ? 'My loan'
-              : "Someone else's loan"}
+            {isLent
+              ? 'Money I lent'
+              : 'Money I borrowed'}
           </Text>
 
           <Text
@@ -267,29 +280,17 @@ export default function LoanDetail() {
               fontWeight: '800',
             }}
           >
-            {loan.name}
+            {record.person}
           </Text>
-
-          {!!loan.source && (
-            <Text
-              style={{
-                color: c.muted,
-                fontSize: 12,
-                marginTop: 2,
-              }}
-            >
-              {loan.source}
-            </Text>
-          )}
         </View>
 
         <Pressable
           onPress={() =>
             router.push({
               pathname:
-                '/edit-loan',
+                '/edit-lendborrow',
               params: {
-                id: loan.id,
+                id: record.id,
               },
             })
           }
@@ -319,10 +320,10 @@ export default function LoanDetail() {
       <View
         style={{
           backgroundColor:
-            isPaid
+            settled
               ? c.green
-              : isMine
-              ? c.pink
+              : isLent
+              ? c.green
               : c.blue,
 
           borderRadius: 26,
@@ -336,9 +337,11 @@ export default function LoanDetail() {
             fontSize: 11,
           }}
         >
-          {isPaid
-            ? 'LOAN PAID'
-            : 'REMAINING BALANCE'}
+          {settled
+            ? 'PAID / SETTLED'
+            : isLent
+            ? 'STILL OWED TO ME'
+            : 'I STILL OWE'}
         </Text>
 
         <Text
@@ -379,7 +382,7 @@ export default function LoanDetail() {
               }}
             >
               ₱
-              {principal.toLocaleString()}
+              {original.toLocaleString()}
             </Text>
           </View>
 
@@ -395,7 +398,7 @@ export default function LoanDetail() {
                 fontSize: 10,
               }}
             >
-              PAID
+              REPAID
             </Text>
 
             <Text
@@ -439,7 +442,7 @@ export default function LoanDetail() {
             marginTop: 7,
           }}
         >
-          {progress.toFixed(0)}% paid
+          {progress.toFixed(0)}% repaid
         </Text>
       </View>
 
@@ -456,80 +459,70 @@ export default function LoanDetail() {
         }}
       >
         <DetailRow
-          label="Lender / provider"
+          label="Type"
           value={
-            loan.source || '—'
+            isLent
+              ? 'I lent money'
+              : 'I borrowed money'
           }
         />
 
         <DetailRow
-          label="Regular payment"
-          value={
-            Number(
-              loan.monthlyPayment ||
-                0
-            ) > 0
-              ? `₱${Number(
-                  loan.monthlyPayment
-                ).toLocaleString()}`
-              : '—'
-          }
+          label="Person"
+          value={record.person}
         />
 
         <DetailRow
-          label="Interest rate"
+          label="Due date"
           value={
-            Number(
-              loan.interestRate || 0
-            ) > 0
-              ? `${loan.interestRate}%`
-              : '—'
-          }
-        />
-
-        <DetailRow
-          label="Next due"
-          value={
-            loan.nextDueDate
+            record.dueDate
               ? formatDate(
-                  loan.nextDueDate
+                  record.dueDate
                 )
               : 'Not set'
           }
         />
 
         <DetailRow
-          label="Status"
+          label="Original source"
           value={
-            isPaid
-              ? 'Paid'
-              : 'Active'
-          }
-          last={
-            !loan.notes
+            record.sourceName ||
+            '—'
           }
         />
 
-        {!!loan.notes && (
+        <DetailRow
+          label="Status"
+          value={
+            settled
+              ? 'Paid / Settled'
+              : 'Active'
+          }
+          last={
+            !record.notes
+          }
+        />
+
+        {!!record.notes && (
           <DetailRow
             label="Notes"
-            value={loan.notes}
+            value={record.notes}
             last
           />
         )}
       </View>
 
-      {/* PAYMENT */}
+      {/* REPAY */}
 
-      {!isPaid && (
+      {!settled && (
         <Pressable
           onPress={() =>
             router.push({
               pathname:
-                '/pay-loan',
+                '/repay-lendborrow',
 
               params: {
-                id: loan.id,
+                id: record.id,
               },
             })
           }
@@ -550,12 +543,14 @@ export default function LoanDetail() {
               fontSize: 15,
             }}
           >
-            Record loan payment
+            {isLent
+              ? 'Record repayment received'
+              : 'Record repayment'}
           </Text>
         </Pressable>
       )}
 
-      {/* PAYMENT HISTORY */}
+      {/* HISTORY */}
 
       <View
         style={{
@@ -573,7 +568,7 @@ export default function LoanDetail() {
             fontWeight: '800',
           }}
         >
-          Payment history
+          History
         </Text>
 
         <Text
@@ -583,7 +578,7 @@ export default function LoanDetail() {
           }}
         >
           {transactions.length}{' '}
-          payment
+          transaction
           {transactions.length === 1
             ? ''
             : 's'}
@@ -616,17 +611,7 @@ export default function LoanDetail() {
               marginTop: 7,
             }}
           >
-            No payments yet
-          </Text>
-
-          <Text
-            style={{
-              color: c.muted,
-              fontSize: 12,
-              marginTop: 4,
-            }}
-          >
-            Recorded loan payments will appear here.
+            No activity yet
           </Text>
         </View>
       ) : (
@@ -655,7 +640,7 @@ export default function LoanDetail() {
                   height: 42,
                   borderRadius: 14,
                   backgroundColor:
-                    c.green,
+                    c.yellow,
                   alignItems:
                     'center',
                   justifyContent:
@@ -668,7 +653,7 @@ export default function LoanDetail() {
                     fontSize: 18,
                   }}
                 >
-                  ✓
+                  ↔
                 </Text>
               </View>
 
@@ -685,7 +670,7 @@ export default function LoanDetail() {
                   }}
                 >
                   {item.description ||
-                    'Loan payment'}
+                    'Payment'}
                 </Text>
 
                 <Text
@@ -748,7 +733,7 @@ export default function LoanDetail() {
               fontSize: 13,
             }}
           >
-            Delete loan
+            Delete record
           </Text>
         </Pressable>
       </View>

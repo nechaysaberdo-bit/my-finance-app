@@ -2,23 +2,26 @@ import React from 'react';
 import {
   ScrollView,
   Text,
+  View,
   Pressable,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 
 const c = {
   bg: '#FFF9F7',
+  card: '#FFFFFF',
   ink: '#3F3338',
   muted: '#9A8A91',
-  pink: '#F9E4E9',
-  lav: '#EEE8FA',
+  mint: '#E7F5ED',
   butter: '#FFF4D6',
+  blue: '#E8F2FF',
+  line: '#F1E7E9',
 };
 
-export default function Obligations() {
+export default function Money() {
   const router = useRouter();
 
-  const Tile = ({ title, subtitle, value, emoji, bg, route }) => (
+  const Tile = ({ title, subtitle, value, bg, emoji, route }) => (
     <Pressable
       onPress={() => router.push(route)}
       style={{
@@ -29,7 +32,6 @@ export default function Obligations() {
       }}
     >
       <Text style={{ fontSize: 22 }}>{emoji}</Text>
-
       <Text
         style={{
           fontSize: 18,
@@ -52,7 +54,7 @@ export default function Obligations() {
 
       <Text
         style={{
-          fontSize: 22,
+          fontSize: 23,
           fontWeight: '800',
           color: c.ink,
           marginTop: 12,
@@ -65,10 +67,7 @@ export default function Obligations() {
 
   return (
     <ScrollView
-      style={{
-        flex: 1,
-        backgroundColor: c.bg,
-      }}
+      style={{ flex: 1, backgroundColor: c.bg }}
       contentContainerStyle={{
         padding: 18,
         paddingBottom: 95,
@@ -81,7 +80,7 @@ export default function Obligations() {
           color: c.ink,
         }}
       >
-        Obligations
+        Money 🌷
       </Text>
 
       <Text
@@ -91,34 +90,34 @@ export default function Obligations() {
           marginBottom: 18,
         }}
       >
-        Loans, personal borrowing and bills.
+        Income, spending and savings in one place.
       </Text>
 
       <Tile
-        title="Loans"
-        subtitle="Mine or someone else's"
-        value="₱42,500 remaining"
-        emoji="🤝"
-        bg={c.lav}
-        route="/loans"
+        title="Income"
+        subtitle="Custom income categories"
+        value="₱85,000 this month"
+        bg={c.mint}
+        emoji="🌷"
+        route="/income"
       />
 
       <Tile
-        title="Lend / Borrow"
-        subtitle="Money between you and other people"
-        value="₱7,000 owed to you"
-        emoji="↔️"
-        bg={c.pink}
-        route="/lendborrow"
-      />
-
-      <Tile
-        title="Bills"
-        subtitle="Recurring and one-time bills"
-        value="₱5,898 due soon"
-        emoji="🧾"
+        title="Expenses"
+        subtitle="Custom expense categories"
+        value="₱31,300 this month"
         bg={c.butter}
-        route="/bills"
+        emoji="🧺"
+        route="/expenses"
+      />
+
+      <Tile
+        title="Savings"
+        subtitle="Goals, deposits and withdrawals"
+        value="₱9,500 saved"
+        bg={c.blue}
+        emoji="💰"
+        route="/savings"
       />
     </ScrollView>
   );
